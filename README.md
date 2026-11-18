@@ -118,9 +118,38 @@ On Metasploitable 2, MySQL accepts `root` with an empty password, yet Nmap's `my
 
 riskmap's own check (`checks.py`) speaks the MySQL handshake directly and waits up to 20 seconds. It found the account. Lesson: a scanner that reports nothing has not proven anything.
 
+A second false negative was hiding in riskmap itself: it skipped its own check whenever Nmap's script had written anything, even an error message. It now skips only when Nmap actually found the empty password, and a regression test keeps it that way.
+
+## Tested on a clean network
+
+Metasploitable is vulnerable on purpose: it shows that riskmap finds problems, not that it stays quiet when there are none. [`lab/clean-network/`](lab/clean-network/) starts six up-to-date services with Docker, configured the way they should be: real passwords, no anonymous access, no port published on the host.
+
+```bash
+cd lab/clean-network
+printf "LAB_PASSWORD=%s\n" "$(openssl rand -hex 16)" > .env   # random password, git-ignored
+sudo docker compose up -d --wait
+cd ../.. && python -m riskmap scan 172.30.0.0/28 --checks --scope lab/clean-network/scope.txt
+```
+
+Result:
+| Service, as seen by Nmap | riskmap |
+|---|---|
+| MySQL 8.4.13 | medium: database reachable over the network (root with an empty password: refused) |
+| MariaDB 11.4.13 | medium: database reachable over the network (root with an empty password: refused) |
+| PostgreSQL (version hidden until login) | medium: database reachable over the network |
+| Apache httpd 2.4.71 | nothing |
+| nginx 1.30.6 | nothing |
+| OpenSSH 10.3 | nothing |
+
+No false alarm: no critical or high finding, and no outdated-version finding. The three medium findings are real: a database reachable from the network is an exposure its owner should justify. The seventh host is the scanning machine itself (the gateway of the Docker network), with no open port.
+
+The test itself had a trap: MySQL took about a minute before listening on the network. A scan started earlier would have missed port 3306 and looked cleaner than the truth, so the lab waits until each database accepts connections (`--wait` and healthchecks).
+
+Six services are a small sample: this shows that riskmap does not cry wolf on a modern stack, not that it never will. Version rules on distribution packages remain the main risk (see [Limitations](#limitations-and-roadmap)).
+
 ## Lab
 
-Kali Linux and Metasploitable 2 on VMware, on a host-only network. Metasploitable is vulnerable on purpose: never expose it to a real network.
+Kali Linux and Metasploitable 2 on VMware, on a host-only network, plus the [clean Docker network](#tested-on-a-clean-network). Metasploitable is vulnerable on purpose: never expose it to a real network.
 
 ## Tests
 

@@ -1,0 +1,2 @@
+# Clean lab network created by docker-compose.yml
+172.30.0.0/28

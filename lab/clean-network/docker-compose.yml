@@ -1,0 +1,78 @@
+# A small, cleanly configured network to measure riskmap's false alarms:
+# current versions, real passwords, no anonymous access, no port published on the host.
+#
+#   cd lab/clean-network
+#   printf "LAB_PASSWORD=%s\n" "$(openssl rand -hex 16)" > .env   # random password, ignored by Git
+#   sudo docker compose up -d --wait
+#   cd ../.. && python -m riskmap scan 172.30.0.0/28 --checks --scope lab/clean-network/scope.txt
+#   cd lab/clean-network && sudo docker compose down
+
+name: riskmap-clean-lab
+
+# "--wait" only returns once each database accepts TCP connections:
+# during their first start, they run a temporary server that does not listen on the network.
+x-healthcheck: &healthcheck
+  interval: 5s
+  timeout: 5s
+  retries: 40
+
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: ${LAB_PASSWORD:?create lab/clean-network/.env first (see the top of this file)}
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+    networks:
+      lab:
+        ipv4_address: 172.30.0.2
+
+  mariadb:
+    image: mariadb:11.4
+    environment:
+      MARIADB_ROOT_PASSWORD: ${LAB_PASSWORD:?create lab/clean-network/.env first (see the top of this file)}
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+    networks:
+      lab:
+        ipv4_address: 172.30.0.3
+
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: ${LAB_PASSWORD:?create lab/clean-network/.env first (see the top of this file)}
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "postgres"]
+    networks:
+      lab:
+        ipv4_address: 172.30.0.4
+
+  apache:
+    image: httpd:2.4
+    networks:
+      lab:
+        ipv4_address: 172.30.0.5
+
+  nginx:
+    image: nginx:stable
+    networks:
+      lab:
+        ipv4_address: 172.30.0.6
+
+  openssh:
+    image: lscr.io/linuxserver/openssh-server:latest  # listens on port 2222, key login only
+    environment:
+      PUID: "1000"
+      PGID: "1000"
+    networks:
+      lab:
+        ipv4_address: 172.30.0.7
+
+networks:
+  lab:
+    ipam:
+      config:
+        - subnet: 172.30.0.0/28
