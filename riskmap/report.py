@@ -9,7 +9,6 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
 from riskmap import __version__
-from riskmap.checks import run_checks
 from riskmap.parser import Host, parse_file
 from riskmap.rules import SEVERITY_ORDER, Finding, evaluate, load_rules
 
@@ -82,7 +81,6 @@ def main() -> None:
         sys.exit(1)
 
     hosts = parse_file(sys.argv[1])
-    run_checks(hosts)
     findings = evaluate(hosts, load_rules())
     html_path, json_path = write_reports(hosts, findings)
     print(f"[+] {len(findings)} findings")

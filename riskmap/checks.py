@@ -3,12 +3,14 @@
 These checks log in to services, so only run them against machines you are allowed to test.
 """
 
+import ipaddress
 import socket
 import struct
 import sys
 
 from riskmap.parser import Host, parse_file
 from riskmap.rules import evaluate, load_rules
+from riskmap.scope import in_scope, load_scope
 
 # MySQL capability flags (see the MySQL "Client/Server Protocol" documentation).
 CLIENT_LONG_PASSWORD = 0x00000001
@@ -81,11 +83,16 @@ def mysql_empty_password(ip: str, port: int = 3306, user: str = "root", timeout:
         return None
 
 
-def run_checks(hosts: list[Host], timeout: float = 20) -> None:
-    """Test MySQL root with an empty password wherever Nmap did not report a result."""
+def run_checks(hosts: list[Host], scope: list[ipaddress.IPv4Network], timeout: float = 20) -> None:
+    """Test MySQL root with an empty password, only on hosts inside the authorized scope."""
     for host in hosts:
+        if not in_scope(host.ip, scope):
+            print(f"[!] {host.ip} is outside the authorized scope: no active check")
+            continue
         for service in host.services:
-            if service.name != "mysql" or "mysql-empty-password" in service.scripts:
+            # Skip only if Nmap already found the problem: its script can also fail or time out.
+            nse_output = service.scripts.get("mysql-empty-password", "")
+            if service.name != "mysql" or "empty password" in nse_output:
                 continue
             print(f"[*] {host.ip}:{service.port} MySQL: trying root with an empty password (up to {timeout:.0f} s)...")
             result = mysql_empty_password(host.ip, service.port, timeout=timeout)
@@ -95,12 +102,12 @@ def run_checks(hosts: list[Host], timeout: float = 20) -> None:
 
 
 def main() -> None:
-    if len(sys.argv) != 2:
-        print("Usage: python -m riskmap.checks <nmap_report.xml>")
+    if len(sys.argv) != 3:
+        print("Usage: python -m riskmap.checks <nmap_report.xml> <scope.txt>")
         sys.exit(1)
 
     hosts = parse_file(sys.argv[1])
-    run_checks(hosts)
+    run_checks(hosts, load_scope(sys.argv[2]))
     critical = [f for f in evaluate(hosts, load_rules()) if f.rule.severity == "critical"]
     for finding in critical:
         print(f"[CRITICAL] {finding.location:<25} {finding.rule.title}  ({finding.evidence})")

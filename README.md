@@ -16,7 +16,7 @@ During my engineering internship, I audited the network of an industrial site wi
 
 - Runs Nmap (`-sV` and a few non-intrusive NSE scripts) against an IPv4 address or network
 - Parses the XML report into hosts and services
-- Runs an **active check** that Nmap can miss: MySQL `root` with an empty password (see [the false negative](#a-false-negative-worth-telling))
+- Runs an **active check** that Nmap can miss: MySQL `root` with an empty password (see [the false negative](#a-false-negative-worth-telling)). It is off by default and limited to the networks listed in a scope file
 - Applies **16 rules written in YAML**: Telnet, r-services, SMBv1, anonymous FTP, backdoored vsftpd 2.3.4, exposed databases, outdated OpenSSH, Apache, MySQL and SQL Server...
 - Writes an **HTML report** for people and a **JSON report** for tools (SIEM, scripts)
 - Returns an exit code you can use in a pipeline (`--fail-on critical`)
@@ -50,18 +50,19 @@ cd riskmap
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-python -m riskmap scan 192.168.242.128             # live: Nmap + active checks
+python -m riskmap scan 192.168.242.128             # live Nmap scan, no login attempt
 python -m riskmap report scan.xml                  # offline: analyze an existing Nmap XML file
-python -m riskmap scan 10.0.0.0/24 --no-checks     # scan only, no login attempt
+python -m riskmap scan 192.168.242.0/24 --checks --scope scope.txt   # + active checks, only inside the scope
 python -m riskmap report scan.xml --fail-on high   # exit code 2 if a high or critical finding exists
 python -m riskmap report scan.xml --rules my_rules.yaml
 ```
 
-Example against Metasploitable 2:
+Example against Metasploitable 2, with `--checks --scope scope.txt`:
 
 ```
 [*] Scanning 192.168.242.128 with Nmap... (this can take a few minutes)
 [+] Nmap XML saved to scans/scan_20261118_045935.xml
+[*] Active checks on, limited to 1 authorized network(s)
 [*] 192.168.242.128:3306 MySQL: trying root with an empty password (up to 20 s)...
     result: ACCEPTED
 
@@ -74,6 +75,8 @@ Example against Metasploitable 2:
     [CRITICAL] 192.168.242.128:1524/tcp  Shell open without authentication
     [CRITICAL] 192.168.242.128:3306/tcp  MySQL account without password
 ```
+
+`scope.txt` lists the networks you have written permission to test, one per line (`#` starts a comment). With a scope file, riskmap refuses to scan or log in anywhere else.
 
 The full report is in [`examples/`](examples/): download the HTML file and open it in a browser.
 
@@ -104,6 +107,7 @@ A security tool reads data that attackers control: service banners, XML files, r
 | Argument injection (`--script=evil.nse` as a target) | the target must be a valid IPv4 address or network |
 | XML bomb ("billion laughs") in a report | parsed with `defusedxml`, entities are refused |
 | Code execution from a rules file | `yaml.safe_load`, never `yaml.load` |
+| Login attempts on systems you may not test | active checks are off by default and refused outside the scope file |
 | Stored XSS through a malicious banner | Jinja2 with `autoescape=True` |
 | Leaking audit data | `scans/` and `reports/` are git-ignored |
 | Compromised dependency in CI | the workflow token is limited to `contents: read` |
@@ -125,7 +129,7 @@ pip install -r requirements-dev.txt
 python -m pytest -v
 ```
 
-24 tests, no network needed (a fake MySQL server runs on localhost). GitHub Actions runs them on Python 3.10, 3.12 and 3.13 at every push.
+37 tests, no network needed (a fake MySQL server runs on localhost). GitHub Actions runs them on Python 3.10, 3.12 and 3.13 at every push.
 
 ## Limitations and roadmap
 
