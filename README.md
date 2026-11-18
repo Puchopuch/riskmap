@@ -132,6 +132,16 @@ cd ../.. && python -m riskmap scan 172.30.0.0/28 --checks --scope lab/clean-netw
 ```
 
 Result:
+
+```
+[*] 172.30.0.2:3306 MySQL: trying root with an empty password (up to 20 s)...
+    result: refused
+[*] 172.30.0.3:3306 MySQL: trying root with an empty password (up to 20 s)...
+    result: refused
+
+[+] 7 host(s), 6 open ports, 3 findings: 0 critical, 0 high, 3 medium, 0 low
+```
+
 | Service, as seen by Nmap | riskmap |
 |---|---|
 | MySQL 8.4.13 | medium: database reachable over the network (root with an empty password: refused) |
