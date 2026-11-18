@@ -110,7 +110,7 @@ A security tool reads data that attackers control: service banners, XML files, r
 
 ## A false negative worth telling
 
-On Metasploitable 2, MySQL accepts `root` with an empty password, yet Nmap's `mysql-empty-password` script reported nothing. In debug mode (`-d`), it showed `receiveGreeting(): failed` and `TIMEOUT`. Measuring the server greeting gave 10 seconds, while the script's timeout is hard-coded to 5 (`socket:set_timeout(5000)`). The cause: MySQL 5.0 looks up the client's IP in reverse DNS before answering, and the lab has no DNS server.
+On Metasploitable 2, MySQL accepts `root` with an empty password, yet Nmap's `mysql-empty-password` script reported nothing. In debug mode (`-d`), it showed `receiveGreeting(): failed` and `TIMEOUT`. Measuring the server greeting gave 10 seconds, while the script's timeout is hard-coded to 5 (`socket:set_timeout(5000)`). The cause: MySQL 5.0 looks up the client's IP in reverse DNS before answering, and the lab has no DNS server. Confirmed: once the client's IP was added to the target's /etc/hosts, the greeting arrived in 0.0 s instead of 10.0 s.
 
 riskmap's own check (`checks.py`) speaks the MySQL handshake directly and waits up to 20 seconds. It found the account. Lesson: a scanner that reports nothing has not proven anything.
 
