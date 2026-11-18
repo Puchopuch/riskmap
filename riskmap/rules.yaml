@@ -1,0 +1,148 @@
+# riskmap default rules.
+# A rule matches when ALL the conditions under "match" are true.
+# Conditions on one open port: services, ports, banner_contains, banner_not_contains,
+# version_below, script (+ output_contains).
+# Condition on the whole host: host_script (+ output_contains).
+# Severity: critical, high, medium or low.
+
+# --- Critical ---------------------------------------------------------------
+
+- id: BINDSHELL
+  title: Shell open without authentication
+  severity: critical
+  match:
+    services: [bindshell]
+  description: A command shell is listening on this port. Anyone who connects gets a shell on the machine, without any password.
+  recommendation: Treat the host as compromised. Isolate it, stop the process and investigate.
+
+- id: VSFTPD_BACKDOOR
+  title: Backdoored vsftpd 2.3.4
+  severity: critical
+  match:
+    banner_contains: vsftpd 2.3.4
+  description: The vsftpd 2.3.4 archive was backdoored in 2011 (CVE-2011-2523). A username ending with ":)" opens a root shell on port 6200.
+  recommendation: Reinstall vsftpd from a trusted source, or replace FTP with SFTP.
+
+- id: MYSQL_EMPTY_PASSWORD
+  title: MySQL account without password
+  severity: critical
+  match:
+    script: mysql-empty-password
+    output_contains: empty password
+  description: A MySQL account (often root) accepts a login with an empty password. Anyone on the network can read and modify the data.
+  recommendation: Set a strong password on every account and remove anonymous accounts.
+
+- id: TELNET
+  title: Telnet in use
+  severity: critical
+  match:
+    services: [telnet]
+  description: Telnet sends logins, passwords and commands in cleartext. Anyone on the network path can read them.
+  recommendation: Disable Telnet and use SSH.
+
+- id: R_SERVICES
+  title: rexec / rlogin / rsh in use
+  severity: critical
+  match:
+    services: [exec, login, shell]
+  description: These old remote access services send credentials in cleartext, and rlogin/rsh can trust a client based only on its IP address (.rhosts files).
+  recommendation: Disable these services and use SSH.
+
+# --- High -------------------------------------------------------------------
+
+- id: SMBV1
+  title: SMBv1 enabled
+  severity: high
+  match:
+    host_script: smb-protocols
+    output_contains: SMBv1
+  description: SMBv1 is obsolete and insecure. Its Windows implementation was exploited by WannaCry and NotPetya (EternalBlue).
+  recommendation: Disable SMBv1 (in Samba, "server min protocol = SMB2"; on Windows, remove the SMB 1.0 feature).
+
+- id: FTP_ANONYMOUS
+  title: Anonymous FTP login allowed
+  severity: high
+  match:
+    script: ftp-anon
+    output_contains: Anonymous FTP login allowed
+  description: Anyone can log in to the FTP server without an account and read files, sometimes write them.
+  recommendation: Disable anonymous access unless it is really needed, and never allow anonymous write.
+
+- id: VNC_EXPOSED
+  title: VNC exposed
+  severity: high
+  match:
+    services: [vnc]
+  description: VNC gives full control of the desktop. It is often protected by a weak password, and the classic protocol does not encrypt the session.
+  recommendation: Do not expose VNC to the network. Reach it through an SSH tunnel or a VPN.
+
+- id: JAVA_RMI
+  title: Java RMI registry exposed
+  severity: high
+  match:
+    services: [java-rmi]
+  description: An exposed RMI registry can allow remote code execution when it loads classes from a remote location.
+  recommendation: Do not expose RMI to the network. Filter the port with a firewall.
+
+# --- Medium -----------------------------------------------------------------
+
+- id: FTP_CLEARTEXT
+  title: FTP in use (cleartext)
+  severity: medium
+  match:
+    services: [ftp]
+  description: FTP sends logins, passwords and files in cleartext.
+  recommendation: Replace FTP with SFTP or FTPS.
+
+- id: DATABASE_EXPOSED
+  title: Database reachable over the network
+  severity: medium
+  match:
+    services: [mysql, postgresql, ms-sql-s, mongodb, redis]
+  description: The database accepts connections from the network. A database should only be reachable by the applications that use it.
+  recommendation: Bind the database to localhost or filter the port with a firewall.
+
+- id: NFS_EXPOSED
+  title: NFS exposed
+  severity: medium
+  match:
+    services: [nfs]
+  description: If the exports are not restricted, any host on the network can mount the shared folders.
+  recommendation: Restrict /etc/exports to the hosts that need it, or disable NFS.
+
+- id: OPENSSH_OUTDATED
+  title: Outdated OpenSSH
+  severity: medium
+  match:
+    banner_contains: OpenSSH
+    version_below: "7.4"
+  description: This OpenSSH version is very old and affected by several published vulnerabilities.
+  recommendation: Upgrade OpenSSH to a supported version.
+
+- id: APACHE_OUTDATED
+  title: Outdated Apache httpd
+  severity: medium
+  match:
+    banner_contains: Apache httpd
+    version_below: "2.4"
+  description: Apache httpd 2.2 is end of life. Its last release dates from 2017 and it no longer gets security fixes.
+  recommendation: Upgrade to Apache httpd 2.4.
+
+- id: MYSQL_OUTDATED
+  title: Outdated MySQL
+  severity: medium
+  match:
+    banner_contains: MySQL
+    banner_not_contains: MariaDB  # MariaDB announces itself as "MySQL 5.5.5-10.x-MariaDB"
+    version_below: "8.0"
+  description: MySQL versions older than 8.0 are end of life and no longer get security fixes.
+  recommendation: Upgrade MySQL to a supported version.
+
+- id: MSSQL_OUTDATED
+  title: Outdated Microsoft SQL Server
+  severity: medium
+  match:
+    banner_contains: Microsoft SQL Server
+    version_below: "13"
+  description: SQL Server 2014 and older versions are end of life and no longer get security fixes.
+  recommendation: Upgrade SQL Server to a supported version.

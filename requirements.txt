@@ -1,1 +1,2 @@
 defusedxml>=0.7
+pyyaml>=6.0
