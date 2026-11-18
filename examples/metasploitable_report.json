@@ -1,0 +1,367 @@
+{
+  "tool": "riskmap 0.1.0",
+  "generated": "2026-11-18T04:59:45",
+  "summary": {
+    "critical": 7,
+    "high": 4,
+    "medium": 8,
+    "low": 0
+  },
+  "findings": [
+    {
+      "id": "VSFTPD_BACKDOOR",
+      "severity": "critical",
+      "title": "Backdoored vsftpd 2.3.4",
+      "host": "192.168.242.128",
+      "port": 21,
+      "protocol": "tcp",
+      "evidence": "ftp vsftpd 2.3.4",
+      "description": "The vsftpd 2.3.4 archive was backdoored in 2011 (CVE-2011-2523). A username ending with \":)\" opens a root shell on port 6200.",
+      "recommendation": "Reinstall vsftpd from a trusted source, or replace FTP with SFTP."
+    },
+    {
+      "id": "TELNET",
+      "severity": "critical",
+      "title": "Telnet in use",
+      "host": "192.168.242.128",
+      "port": 23,
+      "protocol": "tcp",
+      "evidence": "telnet Linux telnetd",
+      "description": "Telnet sends logins, passwords and commands in cleartext. Anyone on the network path can read them.",
+      "recommendation": "Disable Telnet and use SSH."
+    },
+    {
+      "id": "R_SERVICES",
+      "severity": "critical",
+      "title": "rexec / rlogin / rsh in use",
+      "host": "192.168.242.128",
+      "port": 512,
+      "protocol": "tcp",
+      "evidence": "exec netkit-rsh rexecd",
+      "description": "These old remote access services send credentials in cleartext, and rlogin/rsh can trust a client based only on its IP address (.rhosts files).",
+      "recommendation": "Disable these services and use SSH."
+    },
+    {
+      "id": "R_SERVICES",
+      "severity": "critical",
+      "title": "rexec / rlogin / rsh in use",
+      "host": "192.168.242.128",
+      "port": 513,
+      "protocol": "tcp",
+      "evidence": "login",
+      "description": "These old remote access services send credentials in cleartext, and rlogin/rsh can trust a client based only on its IP address (.rhosts files).",
+      "recommendation": "Disable these services and use SSH."
+    },
+    {
+      "id": "R_SERVICES",
+      "severity": "critical",
+      "title": "rexec / rlogin / rsh in use",
+      "host": "192.168.242.128",
+      "port": 514,
+      "protocol": "tcp",
+      "evidence": "shell Netkit rshd",
+      "description": "These old remote access services send credentials in cleartext, and rlogin/rsh can trust a client based only on its IP address (.rhosts files).",
+      "recommendation": "Disable these services and use SSH."
+    },
+    {
+      "id": "BINDSHELL",
+      "severity": "critical",
+      "title": "Shell open without authentication",
+      "host": "192.168.242.128",
+      "port": 1524,
+      "protocol": "tcp",
+      "evidence": "bindshell Metasploitable root shell",
+      "description": "A command shell is listening on this port. Anyone who connects gets a shell on the machine, without any password.",
+      "recommendation": "Treat the host as compromised. Isolate it, stop the process and investigate."
+    },
+    {
+      "id": "MYSQL_EMPTY_PASSWORD",
+      "severity": "critical",
+      "title": "MySQL account without password",
+      "host": "192.168.242.128",
+      "port": 3306,
+      "protocol": "tcp",
+      "evidence": "mysql-empty-password: root account has empty password (checked by riskmap)",
+      "description": "A MySQL account (often root) accepts a login with an empty password. Anyone on the network can read and modify the data.",
+      "recommendation": "Set a strong password on every account and remove anonymous accounts."
+    },
+    {
+      "id": "SMBV1",
+      "severity": "high",
+      "title": "SMBv1 enabled",
+      "host": "192.168.242.128",
+      "port": null,
+      "protocol": null,
+      "evidence": "smb-protocols: dialects: NT LM 0.12 (SMBv1) [dangerous, but default]",
+      "description": "SMBv1 is obsolete and insecure. Its Windows implementation was exploited by WannaCry and NotPetya (EternalBlue).",
+      "recommendation": "Disable SMBv1 (in Samba, \"server min protocol = SMB2\"; on Windows, remove the SMB 1.0 feature)."
+    },
+    {
+      "id": "FTP_ANONYMOUS",
+      "severity": "high",
+      "title": "Anonymous FTP login allowed",
+      "host": "192.168.242.128",
+      "port": 21,
+      "protocol": "tcp",
+      "evidence": "ftp-anon: Anonymous FTP login allowed (FTP code 230)",
+      "description": "Anyone can log in to the FTP server without an account and read files, sometimes write them.",
+      "recommendation": "Disable anonymous access unless it is really needed, and never allow anonymous write."
+    },
+    {
+      "id": "JAVA_RMI",
+      "severity": "high",
+      "title": "Java RMI registry exposed",
+      "host": "192.168.242.128",
+      "port": 1099,
+      "protocol": "tcp",
+      "evidence": "java-rmi GNU Classpath grmiregistry",
+      "description": "An exposed RMI registry can allow remote code execution when it loads classes from a remote location.",
+      "recommendation": "Do not expose RMI to the network. Filter the port with a firewall."
+    },
+    {
+      "id": "VNC_EXPOSED",
+      "severity": "high",
+      "title": "VNC exposed",
+      "host": "192.168.242.128",
+      "port": 5900,
+      "protocol": "tcp",
+      "evidence": "vnc VNC",
+      "description": "VNC gives full control of the desktop. It is often protected by a weak password, and the classic protocol does not encrypt the session.",
+      "recommendation": "Do not expose VNC to the network. Reach it through an SSH tunnel or a VPN."
+    },
+    {
+      "id": "FTP_CLEARTEXT",
+      "severity": "medium",
+      "title": "FTP in use (cleartext)",
+      "host": "192.168.242.128",
+      "port": 21,
+      "protocol": "tcp",
+      "evidence": "ftp vsftpd 2.3.4",
+      "description": "FTP sends logins, passwords and files in cleartext.",
+      "recommendation": "Replace FTP with SFTP or FTPS."
+    },
+    {
+      "id": "OPENSSH_OUTDATED",
+      "severity": "medium",
+      "title": "Outdated OpenSSH",
+      "host": "192.168.242.128",
+      "port": 22,
+      "protocol": "tcp",
+      "evidence": "ssh OpenSSH 4.7p1 Debian 8ubuntu1",
+      "description": "This OpenSSH version is very old and affected by several published vulnerabilities.",
+      "recommendation": "Upgrade OpenSSH to a supported version."
+    },
+    {
+      "id": "APACHE_OUTDATED",
+      "severity": "medium",
+      "title": "Outdated Apache httpd",
+      "host": "192.168.242.128",
+      "port": 80,
+      "protocol": "tcp",
+      "evidence": "http Apache httpd 2.2.8",
+      "description": "Apache httpd 2.2 is end of life. Its last release dates from 2017 and it no longer gets security fixes.",
+      "recommendation": "Upgrade to Apache httpd 2.4."
+    },
+    {
+      "id": "NFS_EXPOSED",
+      "severity": "medium",
+      "title": "NFS exposed",
+      "host": "192.168.242.128",
+      "port": 2049,
+      "protocol": "tcp",
+      "evidence": "nfs 2-4",
+      "description": "If the exports are not restricted, any host on the network can mount the shared folders.",
+      "recommendation": "Restrict /etc/exports to the hosts that need it, or disable NFS."
+    },
+    {
+      "id": "FTP_CLEARTEXT",
+      "severity": "medium",
+      "title": "FTP in use (cleartext)",
+      "host": "192.168.242.128",
+      "port": 2121,
+      "protocol": "tcp",
+      "evidence": "ftp ProFTPD 1.3.1",
+      "description": "FTP sends logins, passwords and files in cleartext.",
+      "recommendation": "Replace FTP with SFTP or FTPS."
+    },
+    {
+      "id": "DATABASE_EXPOSED",
+      "severity": "medium",
+      "title": "Database reachable over the network",
+      "host": "192.168.242.128",
+      "port": 3306,
+      "protocol": "tcp",
+      "evidence": "mysql MySQL 5.0.51a-3ubuntu5",
+      "description": "The database accepts connections from the network. A database should only be reachable by the applications that use it.",
+      "recommendation": "Bind the database to localhost or filter the port with a firewall."
+    },
+    {
+      "id": "MYSQL_OUTDATED",
+      "severity": "medium",
+      "title": "Outdated MySQL",
+      "host": "192.168.242.128",
+      "port": 3306,
+      "protocol": "tcp",
+      "evidence": "mysql MySQL 5.0.51a-3ubuntu5",
+      "description": "MySQL versions older than 8.0 are end of life and no longer get security fixes.",
+      "recommendation": "Upgrade MySQL to a supported version."
+    },
+    {
+      "id": "DATABASE_EXPOSED",
+      "severity": "medium",
+      "title": "Database reachable over the network",
+      "host": "192.168.242.128",
+      "port": 5432,
+      "protocol": "tcp",
+      "evidence": "postgresql PostgreSQL DB 8.3.0 - 8.3.7",
+      "description": "The database accepts connections from the network. A database should only be reachable by the applications that use it.",
+      "recommendation": "Bind the database to localhost or filter the port with a firewall."
+    }
+  ],
+  "hosts": [
+    {
+      "ip": "192.168.242.128",
+      "hostname": "",
+      "services": [
+        {
+          "port": 21,
+          "protocol": "tcp",
+          "name": "ftp",
+          "banner": "vsftpd 2.3.4"
+        },
+        {
+          "port": 22,
+          "protocol": "tcp",
+          "name": "ssh",
+          "banner": "OpenSSH 4.7p1 Debian 8ubuntu1"
+        },
+        {
+          "port": 23,
+          "protocol": "tcp",
+          "name": "telnet",
+          "banner": "Linux telnetd"
+        },
+        {
+          "port": 25,
+          "protocol": "tcp",
+          "name": "smtp",
+          "banner": "Postfix smtpd"
+        },
+        {
+          "port": 53,
+          "protocol": "tcp",
+          "name": "domain",
+          "banner": "ISC BIND 9.4.2"
+        },
+        {
+          "port": 80,
+          "protocol": "tcp",
+          "name": "http",
+          "banner": "Apache httpd 2.2.8"
+        },
+        {
+          "port": 111,
+          "protocol": "tcp",
+          "name": "rpcbind",
+          "banner": "2"
+        },
+        {
+          "port": 139,
+          "protocol": "tcp",
+          "name": "netbios-ssn",
+          "banner": "Samba smbd 3.X - 4.X"
+        },
+        {
+          "port": 445,
+          "protocol": "tcp",
+          "name": "netbios-ssn",
+          "banner": "Samba smbd 3.X - 4.X"
+        },
+        {
+          "port": 512,
+          "protocol": "tcp",
+          "name": "exec",
+          "banner": "netkit-rsh rexecd"
+        },
+        {
+          "port": 513,
+          "protocol": "tcp",
+          "name": "login",
+          "banner": ""
+        },
+        {
+          "port": 514,
+          "protocol": "tcp",
+          "name": "shell",
+          "banner": "Netkit rshd"
+        },
+        {
+          "port": 1099,
+          "protocol": "tcp",
+          "name": "java-rmi",
+          "banner": "GNU Classpath grmiregistry"
+        },
+        {
+          "port": 1524,
+          "protocol": "tcp",
+          "name": "bindshell",
+          "banner": "Metasploitable root shell"
+        },
+        {
+          "port": 2049,
+          "protocol": "tcp",
+          "name": "nfs",
+          "banner": "2-4"
+        },
+        {
+          "port": 2121,
+          "protocol": "tcp",
+          "name": "ftp",
+          "banner": "ProFTPD 1.3.1"
+        },
+        {
+          "port": 3306,
+          "protocol": "tcp",
+          "name": "mysql",
+          "banner": "MySQL 5.0.51a-3ubuntu5"
+        },
+        {
+          "port": 5432,
+          "protocol": "tcp",
+          "name": "postgresql",
+          "banner": "PostgreSQL DB 8.3.0 - 8.3.7"
+        },
+        {
+          "port": 5900,
+          "protocol": "tcp",
+          "name": "vnc",
+          "banner": "VNC"
+        },
+        {
+          "port": 6000,
+          "protocol": "tcp",
+          "name": "X11",
+          "banner": ""
+        },
+        {
+          "port": 6667,
+          "protocol": "tcp",
+          "name": "irc",
+          "banner": "UnrealIRCd"
+        },
+        {
+          "port": 8009,
+          "protocol": "tcp",
+          "name": "ajp13",
+          "banner": "Apache Jserv"
+        },
+        {
+          "port": 8180,
+          "protocol": "tcp",
+          "name": "http",
+          "banner": "Apache Tomcat/Coyote JSP engine 1.1"
+        }
+      ]
+    }
+  ]
+}
